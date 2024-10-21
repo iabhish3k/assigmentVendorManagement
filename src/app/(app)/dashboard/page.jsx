@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,45 +11,30 @@ import { Tooltip, TooltipProvider } from "@/components/ui/tooltip"; // Ensure th
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Search, Users } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
+import axios from 'axios';
 
-// Mock data for demonstration
-const vendors = [
-  { id: 1, name: "Acme Corp", type: "Supplier", criticality: "High", status: "Active", contact: "john@acme.com", serviceProvided: "Raw Materials" },
-  { id: 2, name: "TechPro Solutions", type: "Service Provider", criticality: "Medium", status: "Active", contact: "sarah@techpro.com", serviceProvided: "IT Support" },
-  { id: 3, name: "Global Logistics", type: "Logistics", criticality: "Critical", status: "Active", contact: "mike@globallogistics.com", serviceProvided: "Shipping" },
-  { id: 4, name: "EcoPackage", type: "Supplier", criticality: "Low", status: "Inactive", contact: "lisa@ecopackage.com", serviceProvided: "Packaging Materials" },
-  { id: 5, name: "SecureNet", type: "Service Provider", criticality: "High", status: "Pending", contact: "alex@securenet.com", serviceProvided: "Cybersecurity" },
-];
 
-const vendorTypeData = [
-  { name: 'Supplier', value: 2 },
-  { name: 'Service Provider', value: 2 },
-  { name: 'Logistics', value: 1 },
-];
-
-const criticalityData = [
-  { name: 'Low', value: 1 },
-  { name: 'Medium', value: 1 },
-  { name: 'High', value: 2 },
-  { name: 'Critical', value: 1 },
-];
-
-const statusData = [
-  { name: 'Active', value: 3 },
-  { name: 'Inactive', value: 1 },
-  { name: 'Pending', value: 1 },
-];
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export default function EnhancedVendorDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [vendorTypeData, setvendorTypeData] = useState([]);
+  const [statusData, setstatusData] = useState([]);
+  const [criticalityData, setcriticalityData] = useState([]);
   const { isDarkTheme } = useTheme();
-  const filteredVendors = vendors.filter(vendor =>
-    vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vendor.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vendor.serviceProvided.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+
+  const [vendorsData, setVendorsData] = useState([]);
+  const [vendorsDataStatic, setVendorsDataStatic] = useState([]);
+
+  const filteredVendors = searchTerm
+  ? vendorsDataStatic.filter(vendor =>
+      vendor?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+      vendor?.type?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+      vendor?.serviceProvided?.toLowerCase()?.includes(searchTerm?.toLowerCase())
+    )
+  : vendorsData;
+
 
   const getCriticalityColor = (criticality) => {
     switch (criticality.toLowerCase()) {
@@ -79,6 +64,23 @@ export default function EnhancedVendorDashboard() {
     }
   };
 
+  useEffect(() => {
+    const fetchVendors = async () => {
+      try {
+        const response = await axios.get('/api/dashboard');
+        setVendorsData(response.data.vendorList);
+        setVendorsDataStatic(response.data.vendorList);
+        setvendorTypeData(response.data.vendorTypeData);
+        setstatusData(response.data.statusData)
+        setcriticalityData(response.data.criticalityData)
+      } catch (error) {
+        console.error("Error fetching vendors:", error);
+      }
+    };
+
+    fetchVendors();
+  }, []);
+
   return (
     <TooltipProvider>
       <div className={`min-h-screen ${isDarkTheme ? 'dark' : ''}`}>
@@ -95,7 +97,7 @@ export default function EnhancedVendorDashboard() {
                       <Users className="h-4 w-4 text-blue-600 dark:text-blue-300" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-blue-900 dark:text-blue-50">{vendors.length}</div>
+                      <div className="text-2xl font-bold text-blue-900 dark:text-blue-50">{vendorsData.length}</div>
                     </CardContent>
                   </Card>
                   <Card className="bg-green-50 dark:bg-green-900">
@@ -104,7 +106,7 @@ export default function EnhancedVendorDashboard() {
                       <Users className="h-4 w-4 text-green-600 dark:text-green-300" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-green-900 dark:text-green-50">{vendors.filter(v => v.status === 'Active').length}</div>
+                      <div className="text-2xl font-bold text-green-900 dark:text-green-50">{vendorsData.filter(v => v.status === 'Active').length}</div>
                     </CardContent>
                   </Card>
                   <Card className="bg-red-50 dark:bg-red-900">
@@ -113,7 +115,7 @@ export default function EnhancedVendorDashboard() {
                       <Users className="h-4 w-4 text-red-600 dark:text-red-300" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-red-900 dark:text-red-50">{vendors.filter(v => v.criticality === 'Critical').length}</div>
+                      <div className="text-2xl font-bold text-red-900 dark:text-red-50">{vendorsData.filter(v => v.criticality === 'Critical').length}</div>
                     </CardContent>
                   </Card>
                   <Card className="bg-yellow-50 dark:bg-yellow-900">
@@ -122,7 +124,7 @@ export default function EnhancedVendorDashboard() {
                       <Users className="h-4 w-4 text-yellow-600 dark:text-yellow-300" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-yellow-900 dark:text-yellow-50">{vendors.filter(v => v.status === 'Pending').length}</div>
+                      <div className="text-2xl font-bold text-yellow-900 dark:text-yellow-50">{vendorsData.filter(v => v.status === 'Pending').length}</div>
                     </CardContent>
                   </Card>
                 </div>
@@ -152,12 +154,12 @@ export default function EnhancedVendorDashboard() {
                       <TableHead className="text-gray-800 dark:text-white">Criticality</TableHead>
                       <TableHead className="text-gray-800 dark:text-white">Status</TableHead>
                       <TableHead className="text-gray-800 dark:text-white">Contact</TableHead>
-                      <TableHead className="text-gray-800 dark:text-white">Service Provided</TableHead>
+                      {/* <TableHead className="text-gray-800 dark:text-white">Service Provided</TableHead> */}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredVendors.map(vendor => (
-                      <TableRow key={vendor.id}>
+                      <TableRow key={vendor.name}>
                         <TableCell className="text-gray-800 dark:text-white">{vendor.name}</TableCell>
                         <TableCell className="text-gray-800 dark:text-white">{vendor.type}</TableCell>
                         <TableCell>
@@ -167,7 +169,7 @@ export default function EnhancedVendorDashboard() {
                           <Badge className={getStatusColor(vendor.status)}>{vendor.status}</Badge>
                         </TableCell>
                         <TableCell className="text-gray-800 dark:text-white">{vendor.contact}</TableCell>
-                        <TableCell className="text-gray-800 dark:text-white">{vendor.serviceProvided}</TableCell>
+                        {/* <TableCell className="text-gray-800 dark:text-white">{vendor.serviceProvided}</TableCell> */}
                       </TableRow>
                     ))}
                   </TableBody>

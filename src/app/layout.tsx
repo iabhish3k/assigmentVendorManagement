@@ -3,8 +3,8 @@ import './globals.css';
 import { ThemeProvider } from '@/context/ThemeContext';
 
 export const metadata: Metadata = {
-  title: 'Anonymous Feedback',
-  description: 'Real feedback from real people.',
+  title: 'Venodr Managment',
+  description: 'Venodr Managment Application',
 };
 
 interface RootLayoutProps {

@@ -3,7 +3,7 @@ import React from 'react';
 
 
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+const Layout = ({ children }) => {
     return (
         <div className="flex min-h-screen">
             <Sidebar />
